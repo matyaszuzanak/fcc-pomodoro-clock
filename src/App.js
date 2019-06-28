@@ -1,16 +1,17 @@
 import React from 'react';
 import './App.css';
+import './beep.wav';
 import moment from 'moment';
 
 const Header = () => <h1>Pomodoro Clock</h1>
 
 const SetTimer = ({ type, value, handleClick }) => (
   <div className="SetTimer">
-    <div id={`${type}-label`}>{`${type} Length`}</div>
+    <div id={`${type}-label`}>{type === "session" ? "Session" : "Break"}Length</div>
     <div className="SetTimer-controls">
       <button id={`${type}-decrement`} onClick={() => handleClick(false, `${type}Value`)}>&darr;</button>
-    <div id={`${type}-length`}>{value}</div>
-    <button id={`${type}-increment`} onClick={() => handleClick(true, `${type}Value`)}>&uarr;</button>
+      <h1 id={`${type}-length`}>{value}</h1>
+      <button id={`${type}-increment`} onClick={() => handleClick(true, `${type}Value`)}>&uarr;</button>
     </div >
   </div >
 )
@@ -22,10 +23,11 @@ const Timer = ({ mode, time }) => (
   </div>
 )
 
-const Controls = ({ active }) => (
+const Controls = ({ active, handleReset, handlePlayPause }) => (
   <div className="Controls">
-    <button id="start_stop">{active ? <span>&#10074;&#10074;</span> : <span>&#9658;</span>}</button>
-    <button id="reset">&#8635;</button>
+    <button id="start_stop" onClick={handlePlayPause}>
+      {active ? <span>&#10074;&#10074;</span> : <span>&#9658;</span>}</button>
+    <button id="reset" onClick={handleReset}>&#8635;</button>
   </div>
 )
 
@@ -34,15 +36,62 @@ class App extends React.Component {
     super(props)
     this.state = {
       breakValue: 5,
-      sessionValue: 25,
+      sessionValue: 0.1,
       mode: "session",
       time: 25 * 60 * 1000,
-      active: false
+      active: false,
+      touched: false
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.time === 0 && prevState.mode === "session") {
+      this.setState({  time: this.state.breakValue * 60 * 1000, mode: "break" })
+      this.audio.play()
+    }
+    if (prevState.time === 0 && prevState.mode === "break") {
+      this.setState({ time: this.state.sessionValue * 60 * 1000, mode: "session" })
+      this.audio.play()
     }
   }
 
   handleSetTimers = (inc, type) => {
+    if (this.state[type] === 60 && inc) return
+    if (this.state[type] === 1 && !inc) return
     this.setState({ [type]: this.state[type] + (inc ? 1 : -1) })
+  }
+
+  handleReset = () => {
+    this.setState({ 
+      breakValue: 5, 
+      sessionValue: 25, 
+      time: 25 * 60 * 1000,
+      touched: false,
+      active: false
+    })
+    clearInterval(this.pomodoro)
+    this.audio.pause()
+    this.audio.currentTime = 0
+
+  }
+
+  handlePlayPause = () => {
+    if (this.state.active) {
+      clearInterval(this.pomodoro)
+      this.setState({ active: false })
+    } else {
+      if (this.state.touched) {
+        this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000)
+        this.setState({ active: true })
+      } else {
+        this.setState({
+          time: this.state.sessionValue * 60 * 1000,
+          touched: true,
+          active: true}, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000))
+      }
+
+
+    }
   }
 
   render() {
@@ -54,7 +103,11 @@ class App extends React.Component {
           <SetTimer type="session" value={this.state.sessionValue} handleClick={this.handleSetTimers} />
         </div>
         <Timer mode={this.state.mode} time={moment(this.state.time).format("mm:ss")} />
-        <Controls active={this.state.active} />
+        <Controls
+          active={this.state.active}
+          handlePlayPause={this.handlePlayPause}
+          handleReset={this.handleReset} />
+          <audio id="beep" src="beep.wav" ref={el => this.audio = el}></audio>
       </div>
     )
   }
