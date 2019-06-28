@@ -1,13 +1,12 @@
 import React from 'react';
 import './App.css';
-import './beep.wav';
 import moment from 'moment';
 
 const Header = () => <h1>Pomodoro Clock</h1>
 
 const SetTimer = ({ type, value, handleClick }) => (
   <div className="SetTimer">
-    <div id={`${type}-label`}>{type === "session" ? "Session" : "Break"}Length</div>
+    <div id={`${type}-label`}>{type === "session" ? "Session" : "Break"} Length</div>
     <div className="SetTimer-controls">
       <button id={`${type}-decrement`} onClick={() => handleClick(false, `${type}Value`)}>&darr;</button>
       <h1 id={`${type}-length`}>{value}</h1>
@@ -36,7 +35,7 @@ class App extends React.Component {
     super(props)
     this.state = {
       breakValue: 5,
-      sessionValue: 0.1,
+      sessionValue: 25,
       mode: "session",
       time: 25 * 60 * 1000,
       active: false,
@@ -66,6 +65,7 @@ class App extends React.Component {
       breakValue: 5, 
       sessionValue: 25, 
       time: 25 * 60 * 1000,
+      mode: "session",
       touched: false,
       active: false
     })
@@ -107,7 +107,7 @@ class App extends React.Component {
           active={this.state.active}
           handlePlayPause={this.handlePlayPause}
           handleReset={this.handleReset} />
-          <audio id="beep" src="beep.wav" ref={el => this.audio = el}></audio>
+          <audio id="beep" src="https://s3-us-west-1.amazonaws.com/benjaminadk/Data+synth+beep+high+and+sweet.mp3" ref={el => this.audio = el}></audio>
       </div>
     )
   }
