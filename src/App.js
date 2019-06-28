@@ -72,7 +72,6 @@ class App extends React.Component {
     clearInterval(this.pomodoro)
     this.audio.pause()
     this.audio.currentTime = 0
-
   }
 
   handlePlayPause = () => {
@@ -89,8 +88,6 @@ class App extends React.Component {
           touched: true,
           active: true}, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000))
       }
-
-
     }
   }
 
